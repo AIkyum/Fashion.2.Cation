@@ -180,7 +180,14 @@ function renderCommunityPosts(posts) {
     card.innerHTML = `
       <div class="post-header">
         <div class="post-meta"><span class="post-author">By. ${post.author}</span><span>•</span><span>${new Date(post.created_at).toLocaleDateString('ko-KR')}</span></div>
-        <div class="post-region">${post.location}</div>
+        <div class="post-region-wrapper">
+          <div class="post-region">${post.location}</div>
+          <button class="post-menu-btn" onclick="togglePostMenu('${post.id}')">⋮</button>
+          <div id="post-menu-${post.id}" class="post-dropdown">
+            <button onclick="editPost('${post.id}')">수정</button>
+            <button onclick="deletePost('${post.id}')" class="delete-text">삭제</button>
+          </div>
+        </div>
       </div>
       <h2 class="post-title" style="font-size: ${hasImage ? '16px' : '20px'}; margin-bottom: 12px;">${post.content}</h2>
       
@@ -547,12 +554,20 @@ function selectLocation(loc) {
   locationSelected = true;
 }
 
-// 검색창 밖 클릭 시 드롭다운 닫기
+// 검색창 밖 또는 메뉴 밖 클릭 시 드롭다운 닫기
 document.addEventListener('click', (e) => {
+  // 1. 지역 검색 드롭다운 닫기
   if (searchInput && dropdown) {
     if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
       dropdown.style.display = 'none';
     }
+  }
+  
+  // 2. 게시물 우측 메뉴 드롭다운 닫기 (메뉴 버튼을 누른 게 아니라면)
+  if (!e.target.closest('.post-region-wrapper')) {
+    document.querySelectorAll('.post-dropdown').forEach(menu => {
+      menu.classList.remove('active');
+    });
   }
 });
 
@@ -845,6 +860,61 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 });
+
+// ==========================================
+// 💡 18. 게시물 수정/삭제 메뉴 로직
+// ==========================================
+function togglePostMenu(postId) {
+  // 1. 열려있는 다른 게시물의 메뉴를 모두 닫습니다.
+  document.querySelectorAll('.post-dropdown').forEach(menu => {
+    if (menu.id !== `post-menu-${postId}`) {
+      menu.classList.remove('active');
+    }
+  });
+  
+  // 2. 클릭한 게시물의 메뉴만 엽니다/닫습니다.
+  const menu = document.getElementById(`post-menu-${postId}`);
+  if (menu) {
+    menu.classList.toggle('active');
+  }
+}
+
+function editPost(postId) {
+  // 수정 기능은 이후 글쓰기 모달창(postModal)을 재활용하는 방식으로 고도화할 수 있습니다.
+  alert("현재 게시물 수정 기능은 준비 중입니다!");
+}
+
+async function deletePost(postId) {
+  const token = localStorage.getItem('stylescape_token');
+  if (!token) {
+    alert("로그인이 필요합니다.");
+    openAuthModal('login');
+    return;
+  }
+
+  if (!confirm("정말로 이 게시물을 삭제하시겠습니까?")) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/api/v1/posts/${postId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (res.ok) {
+      alert("게시물이 성공적으로 삭제되었습니다.");
+      resetFeed(); // 피드를 비우고
+      loadCommunityFeed(); // 다시 불러옵니다 (삭제된 것 반영)
+    } else {
+      // 본인이 쓴 글이 아니거나 서버 에러일 때
+      alert("삭제 권한이 없거나 오류가 발생했습니다.");
+    }
+  } catch (err) {
+    console.error("게시물 삭제 오류", err);
+    alert("서버 통신 오류.");
+  }
+}
 
 // 초기 실행
 checkAuthStatus();

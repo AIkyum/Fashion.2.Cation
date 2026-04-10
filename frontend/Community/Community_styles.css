@@ -189,6 +189,77 @@ body {
 }
 
 /* ==========================================
+   💡 게시물 우측 상단 드롭다운 메뉴 (수정/삭제)
+   ========================================== */
+.post-region-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.post-menu-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: rgba(26,22,18,0.4);
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.2s;
+  /* 모바일에서 터치 영역 확보 */
+  min-width: 24px;
+  min-height: 24px;
+}
+
+.post-menu-btn:hover {
+  color: var(--warm-black);
+}
+
+.post-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  display: none; /* 기본은 숨김 */
+  flex-direction: column;
+  min-width: 100px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.post-dropdown.active {
+  display: flex; /* active 클래스가 붙으면 보임 */
+}
+
+.post-dropdown button {
+  background: none;
+  border: none;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 13px;
+  font-family: 'DM Sans', 'Noto Serif KR', sans-serif;
+  color: var(--warm-black);
+  cursor: pointer;
+  transition: background 0.2s;
+  width: 100%;
+}
+
+.post-dropdown button:hover {
+  background: rgba(26,22,18,0.05);
+}
+
+/* 삭제 버튼은 빨간색으로 포인트 */
+.post-dropdown button.delete-text {
+  color: #E53E3E;
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+/* ==========================================
    📱 모바일 반응형 스타일
    ========================================== */
 @media (max-width: 768px) {
