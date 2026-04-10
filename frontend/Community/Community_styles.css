@@ -389,6 +389,15 @@ body {
     max-height: 75vh !important; /* 화면 위아래로 잘리지 않게 높이 제한 */
     padding-bottom: 30px !important;
   }
+
+  #commentModal .auth-modal-content {
+    /* 하단 바텀 시트(밑에서 올라오는) 형태의 하얀 배경은 바닥에 붙여 유지합니다. */
+    /* 대신, 하단 네비게이션 바(약 70px)와 빨간색 버튼을 피해 입력창이 위로 올라오도록 '안쪽 여백'을 넉넉히 줍니다. */
+    padding-bottom: 100px !important; 
+    
+    /* 모바일 키보드가 올라왔을 때도 넉넉하도록 최대 높이를 살짝 늘려줍니다. */
+    max-height: 85vh !important;
+  }
 }
 
 @media (min-width: 769px) {
