@@ -464,6 +464,11 @@ body {
     /* 모바일 키보드가 올라왔을 때도 넉넉하도록 최대 높이를 살짝 늘려줍니다. */
     max-height: 85vh !important;
   }
+
+  #authModal .auth-modal-content {
+    padding-bottom: 100px !important;
+    max-height: 85vh !important;
+  }
 }
 
 @media (min-width: 769px) {
