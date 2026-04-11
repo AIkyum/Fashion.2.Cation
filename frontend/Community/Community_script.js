@@ -921,15 +921,25 @@ function togglePostMenu(postId) {
   }
 }
 
-// 💡 토큰에서 로그인한 유저의 정보를 까보는 함수 (JS 상단 어딘가에 추가해 두세요)
+// ==========================================
+// 💡 내 신분증(토큰) 해독 및 디버깅 함수
+// ==========================================
 function getCurrentUserId() {
   const token = localStorage.getItem('stylescape_token');
   if (!token) return null;
+  
   try {
-    // JWT 토큰의 중간 부분(payload)을 해독해서 유저 ID나 정보를 가져옵니다.
+    // 1. JWT 토큰 해독
     const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.sub; // (보통 sub에 ID나 이메일이 들어있습니다. 백엔드 설정에 따라 다를 수 있음)
+    
+    // 🚨 2. [핵심] F12 콘솔창에 내 토큰 안에 뭐가 들어있는지 전부 다 출력해 봅니다!
+    console.log("🚨 [디버깅] 내 토큰(Payload) 전체 내용:", payload);
+
+    // 일단 기본값인 sub를 반환합니다.
+    return payload.sub; 
+    
   } catch (e) {
+    console.error("토큰 해독 오류:", e);
     return null;
   }
 }
