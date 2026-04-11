@@ -153,6 +153,7 @@ def get_fashion_feed(
 
             results.append({
                 "id": str(post.id),
+                "user_id": str(post.user_id),
                 "content": post.content,
                 "image_url": post.image_url,
                 "author": post.user.nickname if post.user else "탈퇴한 사용자",
