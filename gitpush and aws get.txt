@@ -13,3 +13,4 @@ cd ~/Fashion.2.Cation
 
 # 2. GitHub에 올라온 따끈따끈한 코드 가져오기
 git pull origin main
+

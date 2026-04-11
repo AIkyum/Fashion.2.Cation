@@ -1045,30 +1045,50 @@ async function sharePost(postId) {
   const card = btn.closest('.post-card');
   const content = card.querySelector('.post-title').innerText;
   
-  // 공유될 주소 생성
   const shareUrl = `${API_URL}/share/${postId}`;
   const shortText = content.length > 40 ? content.substring(0, 40) + '...' : content;
 
-  // 💡 파일을 억지로 첨부하지 않고, 텍스트와 URL만 깔끔하게 넘깁니다.
-  // 이렇게 해야 카카오톡 등에서 '클릭 가능한 링크 카드'를 만들어줍니다.
   const shareData = {
     title: 'StyleScape Community',
     text: `[StyleScape] 당신의 도시가 입는 것\n\n${shortText}`,
     url: shareUrl
   };
 
-  if (navigator.share) {
+  // 1. 모바일 기기이면서 HTTPS(또는 로컬) 환경일 때 (가장 완벽한 공유창)
+  if (navigator.share && window.isSecureContext) {
     try {
       await navigator.share(shareData);
     } catch (err) {
-      console.log('공유가 취소되었거나 지원하지 않는 동작입니다.', err);
+      console.log('공유 취소됨:', err);
     }
-  } else {
+  } 
+  // 2. HTTPS 환경에서 클립보드 복사 지원 시
+  else if (navigator.clipboard && window.isSecureContext) {
     try {
       await navigator.clipboard.writeText(shareUrl);
       alert("게시물 링크가 클립보드에 복사되었습니다! ✦\n원하는 곳에 붙여넣기 하세요.");
     } catch (err) {
       alert("링크 복사에 실패했습니다.");
+    }
+  } 
+  // 3. 💡 HTTP 환경 우회 (AWS 우분투에서 현재 작동할 부분)
+  else {
+    // 가상의 투명한 텍스트 입력창을 만들어 주소를 넣고 강제로 복사명령을 내립니다.
+    const textArea = document.createElement("textarea");
+    textArea.value = shareUrl;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    document.body.appendChild(textArea);
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+      alert("게시물 링크가 클립보드에 복사되었습니다! ✦ (우회 복사)");
+    } catch (err) {
+      // 이마저도 막히면 수동으로 복사하도록 팝업을 띄웁니다.
+      prompt("아래 링크를 길게 눌러 복사해 주세요:", shareUrl);
+    } finally {
+      document.body.removeChild(textArea);
     }
   }
 }

@@ -5,3 +5,13 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 - 우분투 서버
 ssh -i "f2c-key.pem" ubuntu@13.209.97.204
+
+- 우분투 서버 정지 및 재시작
+sudo reboot
+
+ cd ~/Fashion.2.Cation
+
+source venv/bin/activate
+
+nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > server.log 2>&1 &
+
