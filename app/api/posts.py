@@ -224,16 +224,21 @@ class PostUpdate(BaseModel):
 # ==========================================
 # 🗑️ 1. 게시물 삭제 API (DELETE)
 # ==========================================
-# 💡 핵심 수정: post_id를 int에서 str로 변경!
 @router.delete("/{post_id}")
-def delete_post(post_id: str, db: Session = Depends(get_db)):
-    # 1. DB에서 해당 ID의 게시물 찾기
+def delete_post(
+    post_id: str, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user) # 💡 1. 토큰을 까서 현재 접속한 유저를 데려옵니다.
+):
     post = db.query(Post).filter(Post.id == post_id).first()
     
     if not post:
         raise HTTPException(status_code=404, detail="게시물을 찾을 수 없습니다.")
     
-    # 2. DB에서 삭제 후 저장
+    # 💡 2. 철통 보안: 게시물의 주인(user_id)과 현재 요청한 사람(current_user.id)이 같은지 검사!
+    if post.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="본인이 작성한 글만 삭제할 수 있습니다.")
+    
     db.delete(post)
     db.commit()
     
@@ -242,31 +247,31 @@ def delete_post(post_id: str, db: Session = Depends(get_db)):
 # ==========================================
 # ✍️ 2. 게시물 수정 API (PUT)
 # ==========================================
-# 💡 핵심 수정: post_id를 int에서 str로 변경!
 @router.put("/{post_id}")
-def update_post(post_id: str, post_data: PostUpdate, db: Session = Depends(get_db)):
-    # 1. DB에서 해당 게시물 찾기
+def update_post(
+    post_id: str, 
+    post_data: PostUpdate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user) # 💡 1. 현재 접속한 유저 데려오기
+):
     post = db.query(Post).filter(Post.id == post_id).first()
     
     if not post:
         raise HTTPException(status_code=404, detail="게시물을 찾을 수 없습니다.")
     
-    # 2. 내용 업데이트
+    # 💡 2. 철통 보안: 게시물의 주인과 현재 요청한 사람이 같은지 검사!
+    if post.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="본인이 작성한 글만 수정할 수 있습니다.")
+    
     post.content = post_data.content
     
-    # 3. 태그 업데이트 로직 (새로운 태그가 들어왔다면)
     if post_data.user_tags is not None:
-        # 기존 태그를 모조리 지우고
         db.query(PostTag).filter(PostTag.post_id == post.id).delete()
-        
-        # 새로 입력받은 태그를 추가합니다
         if post_data.user_tags.strip():
             tags = [t.strip() for t in post_data.user_tags.split(",") if t.strip()]
             for tag in tags:
                 new_tag = PostTag(post_id=post.id, tag_name=tag, is_ai_generated=False)
                 db.add(new_tag)
                 
-    # 4. 저장!
     db.commit()
-    
     return {"status": "success", "message": "게시물 및 태그가 수정되었습니다."}

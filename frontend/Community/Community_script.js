@@ -170,6 +170,9 @@ function searchByTag(tag) {
 // ==========================================
 function renderCommunityPosts(posts) {
   const container = document.getElementById('feed-container');
+  
+  // 1. 피드를 그리기 전에 현재 접속한 사람의 ID를 확인합니다.
+  const currentUserId = getCurrentUserId();
 
   posts.forEach(post => {
     const card = document.createElement('div');
@@ -200,17 +203,25 @@ function renderCommunityPosts(posts) {
     const likeIcon = post.is_liked ? '♥' : '♡';
     const likeStyle = post.is_liked ? 'color: var(--rust); font-weight: 600;' : '';
 
+    // 💡 2. 핵심 로직: 현재 로그인한 ID와 게시물 작성자의 ID가 같을 때만 메뉴를 만듭니다.
+    // (백엔드에서 post 데이터 안에 user_id 를 함께 보내주고 있어야 정상 작동합니다.)
+    let menuHtml = "";
+    if (currentUserId && post.user_id === currentUserId) {
+      menuHtml = `
+        <button class="post-menu-btn" onclick="togglePostMenu('${post.id}')">⋮</button>
+        <div id="post-menu-${post.id}" class="post-dropdown">
+          <button onclick="editPost('${post.id}')">수정</button>
+          <button onclick="deletePost('${post.id}')" class="delete-text">삭제</button>
+        </div>
+      `;
+    }
+
     card.innerHTML = `
       <div class="post-header">
         <div class="post-meta"><span class="post-author">By. ${post.author}</span><span>•</span><span>${new Date(post.created_at).toLocaleDateString('ko-KR')}</span></div>
         <div class="post-region-wrapper">
           <div class="post-region">${post.location}</div>
-          <button class="post-menu-btn" onclick="togglePostMenu('${post.id}')">⋮</button>
-          <div id="post-menu-${post.id}" class="post-dropdown">
-            <button onclick="editPost('${post.id}')">수정</button>
-            <button onclick="deletePost('${post.id}')" class="delete-text">삭제</button>
-          </div>
-        </div>
+          ${menuHtml} </div>
       </div>
       <h2 class="post-title" style="font-size: ${hasImage ? '16px' : '20px'}; margin-bottom: 12px;">${post.content}</h2>
       
@@ -237,6 +248,7 @@ function renderCommunityPosts(posts) {
     `;
     container.appendChild(card);
   });
+  
   bindCursorEventsToNewElements();
 }
 
@@ -906,6 +918,19 @@ function togglePostMenu(postId) {
   const menu = document.getElementById(`post-menu-${postId}`);
   if (menu) {
     menu.classList.toggle('active');
+  }
+}
+
+// 💡 토큰에서 로그인한 유저의 정보를 까보는 함수 (JS 상단 어딘가에 추가해 두세요)
+function getCurrentUserId() {
+  const token = localStorage.getItem('stylescape_token');
+  if (!token) return null;
+  try {
+    // JWT 토큰의 중간 부분(payload)을 해독해서 유저 ID나 정보를 가져옵니다.
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.sub; // (보통 sub에 ID나 이메일이 들어있습니다. 백엔드 설정에 따라 다를 수 있음)
+  } catch (e) {
+    return null;
   }
 }
 
