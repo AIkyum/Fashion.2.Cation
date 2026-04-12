@@ -49,7 +49,6 @@ try:
         for page in range(1, MAX_PAGES + 1):
             print(f"  📄 {page}페이지 상세 데이터 요청 중...")
             
-            # API 요청을 위한 포장(Payload) 세팅
             facet_input = {"largeId": target["largeId"]}
             if "middleId" in target:
                 facet_input["middleId"] = target["middleId"]
@@ -63,7 +62,6 @@ try:
                 "pageRequest": {"page": page, "size": PAGE_SIZE}
             }
             
-            # 🚨 내가 아까 빼먹었던 바로 그 부분! 여기서 서버에 요청을 보냄!
             response = requests.post(API_URL, headers=HEADERS, json=payload)
             
             if response.status_code == 200:
@@ -75,42 +73,33 @@ try:
                 
                 for item in items:
                     try:
-                        # 1. 아이템 이름 찾기 (여러 경로 대비)
-                        item_name = ""
-                        if "itemEvent" in item and "eventProperties" in item["itemEvent"]:
-                            item_name = item["itemEvent"]["eventProperties"].get("itemName", "")
-                        if not item_name:
-                            item_name = item.get("itemName", "이름없음")
-                            
-                        # 사진 주소 찾기
-                        img_url = item.get("imageUrl") or f"https://img.29cm.co.kr{item.get('imagePath', '')}"
+                        # 🔥 찾아낸 진짜 데이터 상자 열기!
+                        item_info = item.get("itemInfo", {})
+                        event_props = item.get("itemEvent", {}).get("eventProperties", {})
                         
+                        # 1. 정보 추출
+                        item_name = item_info.get("productName", event_props.get("itemName", "이름없음"))
+                        brand = item_info.get("brandName", event_props.get("brandName", "알수없음"))
+                        price = item_info.get("displayPrice", event_props.get("price", 0))
+                        discount_rate = item_info.get("saleRate", event_props.get("discountRate", 0))
+                        review_count = item_info.get("reviewCount", 0)
+                        heart_count = item_info.get("likeCount", 0)
+                        
+                        # 2. 사진 저장 (이미 있으면 패스)
+                        img_url = item_info.get("thumbnailUrl", "")
                         if not img_url or "http" not in img_url:
                             continue
                             
-                        # 사진 저장 (이미 있으면 패스해서 초고속으로 넘어감!)
-                        img_filename = f"{target['label_name']}_p{page:02d}_{item['itemId']}.jpg"
+                        item_id = item.get("itemId", "000000")
+                        img_filename = f"{target['label_name']}_p{page:02d}_{item_id}.jpg"
                         img_path = os.path.join(IMG_FOLDER, img_filename)
                         
                         if not os.path.exists(img_path):
                             img_res = requests.get(img_url).content
                             with open(img_path, "wb") as f:
                                 f.write(img_res)
-                        
-                        # 2. 🔥 [업그레이드] 상세 정보 꼼꼼하게 뒤지기
-                        brand_info = item.get("brand", {})
-                        brand = brand_info.get("brandName", item.get("frontBrandName", "알수없음"))
-                        
-                        price_info = item.get("price", {})
-                        price = price_info.get("salePrice", item.get("sellPrice", item.get("consumerPrice", 0)))
-                        discount_rate = price_info.get("discountRate", item.get("discountRate", 0))
-                        
-                        review_info = item.get("review", {})
-                        review_count = review_info.get("count", item.get("reviewCount", 0))
-                        
-                        heart_count = item.get("likeCount", item.get("heartCount", 0))
 
-                        # 3. 엑셀에 데이터 넣기
+                        # 3. 엑셀에 빵빵한 데이터 추가
                         collected_data.append({
                             "filename": img_filename,
                             "gender": target["gender"],
@@ -127,7 +116,7 @@ try:
                         continue
                 
                 print(f"  -> ✅ {page}페이지 상세 완료 (누적 {len(collected_data)}개)")
-                time.sleep(1)
+                time.sleep(1) # 서버에 무리 가지 않게 1초 쉬기
                 
             else:
                 print(f"🚨 API 요청 실패: {response.status_code}")
