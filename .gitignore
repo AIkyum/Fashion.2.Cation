@@ -14,3 +14,10 @@ uploads/
 
 # 맥 OS 시스템 파일 (혹시 모를 찌꺼기 방지)
 .DS_Store
+
+# --- AI Data (크롤링한 이미지 및 CSV 데이터 무시) ---
+**/ai_dataset_29cm/
+**/ai_dataset_fast/
+*.jpg
+*.png
+*.csv
