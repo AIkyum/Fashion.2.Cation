@@ -2,6 +2,7 @@ import os
 import requests
 import pandas as pd
 import time
+import random
 
 print("==================================================")
 print("🚀 대규모 데이터 수집기 (사진 + 상세 스펙 모두 수집!)")
@@ -116,7 +117,7 @@ try:
                         continue
                 
                 print(f"  -> ✅ {page}페이지 상세 완료 (누적 {len(collected_data)}개)")
-                time.sleep(1) # 서버에 무리 가지 않게 1초 쉬기
+                time.sleep(random.uniform(2.0, 4.0)) # 서버에 무리 가지 않게 2~10초 랜덤으로 쉬기
                 
             else:
                 print(f"🚨 API 요청 실패: {response.status_code}")
